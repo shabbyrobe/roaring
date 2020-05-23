@@ -698,6 +698,51 @@ func (rb *Bitmap) Rank(x uint32) uint64 {
 	return size
 }
 
+func (rb *Bitmap) ClampStart(first uint32) *Bitmap {
+	x := highbits(first)
+	index := rb.highlowcontainer.getIndex(x)
+	if index < 0 {
+		index = -index - 1
+	}
+
+	next := New()
+	if len(rb.highlowcontainer.containers) > 0 {
+		next.highlowcontainer.appendCopyMany(rb.highlowcontainer, int(x), rb.highlowcontainer.size())
+
+		if len(next.highlowcontainer.containers) > 0 {
+			container := next.highlowcontainer.containers[0]
+			if container.minimum() != lowbits(first) {
+				container.iremoveRange(0, int(lowbits(first)))
+			}
+		}
+	}
+
+	return next
+}
+
+func (rb *Bitmap) ClampEnd(last uint32) *Bitmap {
+	x := highbits(last)
+	index := rb.highlowcontainer.getIndex(x)
+	if index < 0 {
+		index = -index - 1
+	}
+
+	next := New()
+	if len(rb.highlowcontainer.containers) > 0 {
+		next.highlowcontainer.appendCopyMany(rb.highlowcontainer, 0, int(x)+1)
+
+		ln := len(next.highlowcontainer.containers)
+		if ln > 0 {
+			container := next.highlowcontainer.containers[ln-1]
+			if container.maximum() != lowbits(last) {
+				container.iremoveRange(int(lowbits(last))+1, int(container.maximum())+1)
+			}
+		}
+	}
+
+	return next
+}
+
 // Select returns the xth integer in the bitmap. If you pass 0, you get
 // the smallest element. Note that this function differs in convention from
 // the Rank function which returns 1 on the smallest value.

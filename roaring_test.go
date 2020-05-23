@@ -379,6 +379,66 @@ func TestBitmapSelect(t *testing.T) {
 	}
 }
 
+func TestBitmapClampStart(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{1, 49, 50, 51, 100000, 200000})
+		nb := rb.ClampStart(51)
+		assert.Equal(t, nb.ToArray(), []uint32{51, 100000, 200000})
+	})
+
+	t.Run("after-end", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{1, 49, 50, 51, 100000, 200000})
+		nb := rb.ClampStart(200001)
+		assert.Equal(t, nb.ToArray(), []uint32{})
+	})
+
+	t.Run("clamprc16", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddRange(1, 10000)
+		_ = rb.highlowcontainer.containers[0].(*runContainer16)
+		nb := rb.ClampStart(9998)
+		assert.Equal(t, nb.ToArray(), []uint32{9998, 9999})
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		xb := NewBitmap()
+		xb = xb.ClampStart(51)
+		assert.Equal(t, xb.ToArray(), []uint32{})
+	})
+}
+
+func TestBitmapClampEnd(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{1, 49, 50, 51, 100000, 200000})
+		nb := rb.ClampEnd(51)
+		assert.Equal(t, nb.ToArray(), []uint32{1, 49, 50, 51})
+	})
+
+	t.Run("before-start", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{49, 50, 51, 100000, 200000})
+		nb := rb.ClampEnd(2)
+		assert.Equal(t, nb.ToArray(), []uint32{})
+	})
+
+	t.Run("clamprc16", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddRange(1, 10000)
+		_ = rb.highlowcontainer.containers[0].(*runContainer16)
+		nb := rb.ClampEnd(3)
+		assert.Equal(t, nb.ToArray(), []uint32{1, 2, 3})
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		xb := NewBitmap()
+		xb = xb.ClampEnd(51)
+		assert.Equal(t, xb.ToArray(), []uint32{})
+	})
+}
+
 // some extra tests
 func TestBitmapExtra(t *testing.T) {
 	for N := uint32(1); N <= 65536; N *= 2 {
