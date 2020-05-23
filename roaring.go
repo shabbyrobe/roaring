@@ -698,6 +698,34 @@ func (rb *Bitmap) Rank(x uint32) uint64 {
 	return size
 }
 
+func (rb *Bitmap) Split(first uint32) (left *Bitmap, right *Bitmap) {
+	x := highbits(first)
+	index := rb.highlowcontainer.getIndex(x)
+	if index < 0 {
+		index = -index - 1
+	}
+
+	left = rb
+	right = New()
+	if len(left.highlowcontainer.containers) > 0 {
+		right.highlowcontainer.appendWithoutCopyMany(left.highlowcontainer, int(x), left.highlowcontainer.size())
+		left.highlowcontainer.resize(int(x))
+
+		if len(right.highlowcontainer.containers) > 0 {
+			rightContainer := right.highlowcontainer.containers[0]
+			if rightContainer.minimum() != lowbits(first) {
+				leftContainer := right.highlowcontainer.containers[0].clone()
+				leftContainer.iremoveRange(int(lowbits(first)), 0x10000)
+				left.highlowcontainer.appendContainer(x, leftContainer, true)
+
+				rightContainer.iremoveRange(0, int(lowbits(first)))
+			}
+		}
+	}
+
+	return left, right
+}
+
 func (rb *Bitmap) ClampStart(first uint32) *Bitmap {
 	x := highbits(first)
 	index := rb.highlowcontainer.getIndex(x)

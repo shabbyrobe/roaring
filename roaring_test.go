@@ -439,6 +439,39 @@ func TestBitmapClampEnd(t *testing.T) {
 	})
 }
 
+func TestBitmapSplit(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{1, 49, 50, 51, 100000, 200000})
+		l, r := rb.Split(51)
+		assert.Equal(t, []uint32{1, 49, 50}, l.ToArray())
+		assert.Equal(t, []uint32{51, 100000, 200000}, r.ToArray())
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		xb := NewBitmap()
+		l, r := xb.Split(51)
+		assert.Equal(t, []uint32{}, l.ToArray())
+		assert.Equal(t, []uint32{}, r.ToArray())
+	})
+
+	t.Run("before-start", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{49, 50})
+		l, r := rb.Split(1)
+		assert.Equal(t, []uint32{}, l.ToArray())
+		assert.Equal(t, []uint32{49, 50}, r.ToArray())
+	})
+
+	t.Run("before-start", func(t *testing.T) {
+		rb := NewBitmap()
+		rb.AddMany([]uint32{49, 50})
+		l, r := rb.Split(51)
+		assert.Equal(t, []uint32{49, 50}, l.ToArray())
+		assert.Equal(t, []uint32{}, r.ToArray())
+	})
+}
+
 // some extra tests
 func TestBitmapExtra(t *testing.T) {
 	for N := uint32(1); N <= 65536; N *= 2 {
