@@ -709,7 +709,7 @@ func (rb *Bitmap) Split(first uint32) (left *Bitmap, right *Bitmap) {
 	right = New()
 	if len(left.highlowcontainer.containers) > 0 {
 		right.highlowcontainer.appendWithoutCopyMany(left.highlowcontainer, int(x), left.highlowcontainer.size())
-		left.highlowcontainer.resize(int(x))
+		left.highlowcontainer.resize(index)
 
 		if len(right.highlowcontainer.containers) > 0 {
 			rightContainer := right.highlowcontainer.containers[0]

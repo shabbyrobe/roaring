@@ -463,12 +463,21 @@ func TestBitmapSplit(t *testing.T) {
 		assert.Equal(t, []uint32{49, 50}, r.ToArray())
 	})
 
-	t.Run("before-start", func(t *testing.T) {
+	t.Run("after-end", func(t *testing.T) {
 		rb := NewBitmap()
 		rb.AddMany([]uint32{49, 50})
 		l, r := rb.Split(51)
 		assert.Equal(t, []uint32{49, 50}, l.ToArray())
 		assert.Equal(t, []uint32{}, r.ToArray())
+	})
+
+	t.Run("bug-resize-use-index-not-highbits", func(t *testing.T) {
+		rb := NewBitmap()
+		for i := uint64(0); i <= 0xffffffff; i += 0x1000000 {
+			rb.Add(uint32(i))
+		}
+		l, r := rb.Split(0xfffffffe)
+		_, _ = l, r
 	})
 }
 
